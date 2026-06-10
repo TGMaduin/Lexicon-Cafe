@@ -6,13 +6,15 @@ public class CafeApp {
 
     String customerName;
     boolean loyaltyMember = false;
-    int itemNumber, quantity;
-    double subtotal, discount, vat, total;
+    int itemNumber, quantity, customersServed;
+    double subtotal, discount, vat, total, totalRevenue;
     HashMap<Integer, String> menuItems = new HashMap<>();
     HashMap<Integer, Double> menuItemPrices = new HashMap<>();
 
     public CafeApp(){
         buildMenu();
+        customersServed = 0;
+        totalRevenue = 0;
     }
 
     public void buildMenu(){
@@ -51,15 +53,24 @@ public class CafeApp {
         return (subtotal - discount) * 0.12;
     }
 
-
     public void customerGreeting(){
         IO.print("Welcome! What is your name? ");
         customerName = IO.readln();
-        IO.println("Hi " + customerName + "! Here is our menu:");
-        printMenu();
+    }
+
+    public void printEndOfDayReport(){
+        IO.println("");
+        IO.println("==============================");
+        IO.println("      END OF DAY REPORT       ");
+        IO.println("==============================");
+        IO.println("Customers served\t: " + customersServed);
+        IO.println("Total revenue\t: " + totalRevenue + " SEK");
+        IO.println("==============================");
+        IO.println("");
     }
 
     public void printMenu(){
+        IO.println("Hi " + customerName + "! Here is our menu:");
         IO.println("");
         IO.println("==============================");
         IO.println("         Lexicon Cafe         ");
@@ -99,7 +110,31 @@ public class CafeApp {
         discount = calculateDiscount();
         vat = calculateVat();
         total = calculateTotal();
+        totalRevenue += total;
+        customersServed++;
         printReceipt();
+    }
+
+    public void resetTransaction(){
+        customerName = "";
+        loyaltyMember = false;
+        subtotal = 0;
+        discount = 0;
+        vat = 0;
+        total = 0;
+    }
+
+    public void run(){
+        customerGreeting();
+        do {
+            printMenu();
+            resetTransaction();
+            transactionInput();
+            processTransaction();
+            IO.print("Next customer name (or 'done' to close): ");
+            customerName = IO.readln();
+        } while (!customerName.equals("done"));
+        printEndOfDayReport();
     }
 
     public void transactionInput(){
