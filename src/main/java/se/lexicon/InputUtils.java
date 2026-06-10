@@ -52,7 +52,7 @@ public final class InputUtils {
         String name;
 
         while (true){
-
+            IO.print("Next customer name (or 'done' to close): ");
             name = IO.readln();
 
             if (name == null) {
