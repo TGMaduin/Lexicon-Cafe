@@ -1,15 +1,14 @@
 package se.lexicon;
 
-import java.util.HashMap;
+import java.util.*;
 
 public class CafeApp {
 
     String customerName;
     boolean loyaltyMember = false;
     int itemNumber, quantity, customersServed;
-    double subtotal, discount, vat, total, totalRevenue;
-    HashMap<Integer, String> menuItems = new HashMap<>();
-    HashMap<Integer, Double> menuItemPrices = new HashMap<>();
+    double totalRevenue;
+    ArrayList<MenuItem> menu;
 
     public CafeApp(){
         buildMenu();
@@ -18,39 +17,12 @@ public class CafeApp {
     }
 
     public void buildMenu(){
-        menuItems.put(1, "Espresso");
-        menuItems.put(2, "Cappuccino");
-        menuItems.put(3, "Latte");
-        menuItems.put(4, "Croissant");
-        menuItems.put(5, "Sandwich");
-        menuItemPrices.put(1, 25.00);
-        menuItemPrices.put(2, 35.00);
-        menuItemPrices.put(3, 40.00);
-        menuItemPrices.put(4, 30.00);
-        menuItemPrices.put(5, 55.00);
-    }
-
-    public double calculateDiscount(){
-        if (loyaltyMember){
-            return subtotal * 0.15;
-        } else if (subtotal >= 150) {
-            return subtotal * 0.1;
-        }
-        else{
-            return 0;
-        }
-    }
-
-    public double calculateSubtotal(){
-        return menuItemPrices.get(itemNumber) * quantity;
-    }
-
-    public double calculateTotal(){
-        return subtotal - discount + vat;
-    }
-
-    public double calculateVat(){
-        return (subtotal - discount) * 0.12;
+        menu = new ArrayList<>();
+        menu.add(new MenuItem("Espresso", 25.00));
+        menu.add(new MenuItem("Cappuccino", 35.00));
+        menu.add(new MenuItem("Latte", 40.00));
+        menu.add(new MenuItem("Croissant", 30.00));
+        menu.add(new MenuItem("Sandwich", 55.00));
     }
 
     public void customerGreeting(){
@@ -59,69 +31,37 @@ public class CafeApp {
     }
 
     public void printEndOfDayReport(){
-        IO.println("");
-        IO.println("==============================");
-        IO.println("      END OF DAY REPORT       ");
-        IO.println("==============================");
-        IO.println("Customers served\t: " + customersServed);
-        IO.println("Total revenue\t: " + totalRevenue + " SEK");
-        IO.println("==============================");
-        IO.println("");
+        IO.println(String.format(""" 
+                \n
+                ==============================
+                      END OF DAY REPORT
+                ==============================
+                %-18s: %d
+                %-18s: %.2f SEK
+                ==============================\n""",
+                "Customers served",
+                customersServed,
+                "Total revenue",
+                totalRevenue));
     }
 
     public void printMenu(){
-        IO.println("Hi " + customerName + "! Here is our menu:");
-        IO.println("");
-        IO.println("==============================");
-        IO.println("         Lexicon Cafe         ");
-        IO.println("==============================");
-        IO.println("1. Espresso         25.00 SEK ");
-        IO.println("2. Cappuccino       35.00 SEK ");
-        IO.println("3. Latte            40.00 SEK ");
-        IO.println("4. Croissant        30.00 SEK ");
-        IO.println("5. Sandwich         55.00 SEK ");
-        IO.println("==============================");
-        IO.println("");
-    }
-
-    public void printReceipt(){
-        IO.println("");
-        IO.println("==============================");
-        IO.println("         Lexicon Cafe         ");
-        IO.println("==============================");
-        IO.println("Customer\t: " + customerName);
-        IO.println("Item\t\t: " + menuItems.get(itemNumber) + " x " + quantity);
-        IO.println("Subtotal\t: " + subtotal + " SEK");
-        if (discount > 0) {
-            IO.println("Discount\t: -" + discount + " SEK");
+        IO.println(String.format("""
+                \n
+                Hi %s! Here is our menu:\n
+                ==============================
+                         Lexicon Cafe
+                ==============================""",
+                customerName));
+        for(int i = 0; i < menu.size(); i++){
+            IO.println(String.format(
+                    "%d. %-15s %6.2f SEK",
+                    (i + 1),
+                    menu.get(i).getName(),
+                    menu.get(i).getPrice()
+            ));
         }
-        IO.println("VAT\t\t\t: " + vat + " SEK");
-        IO.println("------------------------------");
-        IO.println("TOTAL\t\t: " + total + " SEK");
-        IO.println("==============================");
-        IO.println("   Thank you, " + customerName + "!");
-        IO.println("   See you next time.");
-        IO.println("==============================");
-        IO.println("");
-    }
-
-    public void processTransaction(){
-        subtotal = calculateSubtotal();
-        discount = calculateDiscount();
-        vat = calculateVat();
-        total = calculateTotal();
-        totalRevenue += total;
-        customersServed++;
-        printReceipt();
-    }
-
-    public void resetTransaction(){
-        customerName = "";
-        loyaltyMember = false;
-        subtotal = 0;
-        discount = 0;
-        vat = 0;
-        total = 0;
+        IO.println("==============================\n");
     }
 
     public void run(){
@@ -129,9 +69,14 @@ public class CafeApp {
         customerGreeting();
         do {
             printMenu();
-            resetTransaction();
             transactionInput();
-            processTransaction();
+            Order order = new Order(customerName,
+                    menu.get(itemNumber - 1),
+                    quantity,
+                    loyaltyMember);
+            order.processTransaction();
+            totalRevenue += order.getTotal();
+            customersServed++;
             IO.print("Next customer name (or 'done' to close): ");
             customerName = InputUtils.readName();
         } while (!customerName.equals("done"));
@@ -140,8 +85,18 @@ public class CafeApp {
 
     public void transactionInput(){
 
-        itemNumber = InputUtils.readValidatedInt("Enter item number (1-5): ", "Input has to be numeric only.", "Number has to be within range.", 1, 5);
-        quantity = InputUtils.readValidatedInt("How many? ", "Input has to be numeric only.", "Number has to be positive.", 1, Integer.MAX_VALUE);
+        itemNumber = InputUtils.readValidatedInt(
+                "Enter item number (1-5): ",
+                "Input has to be numeric only.",
+                "Number has to be within range.",
+                1,
+                5);
+        quantity = InputUtils.readValidatedInt(
+                "How many? ",
+                "Input has to be numeric only.",
+                "Number has to be positive.",
+                1,
+                Integer.MAX_VALUE);
         loyaltyMember = InputUtils.checkMembership();
 
     }
