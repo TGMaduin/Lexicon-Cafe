@@ -5,9 +5,7 @@ package se.lexicon;
 public class Main {
     static void main() {
         CafeApp app = new CafeApp();
-        app.customerGreeting();
-        app.transactionInput();
-        app.processTransaction();
+        app.run();
     }
 
 
