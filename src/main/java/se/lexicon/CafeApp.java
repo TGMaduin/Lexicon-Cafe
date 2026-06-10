@@ -55,7 +55,7 @@ public class CafeApp {
 
     public void customerGreeting(){
         IO.print("Welcome! What is your name? ");
-        customerName = IO.readln();
+        customerName = InputUtils.readName();
     }
 
     public void printEndOfDayReport(){
@@ -125,6 +125,7 @@ public class CafeApp {
     }
 
     public void run(){
+
         customerGreeting();
         do {
             printMenu();
@@ -132,19 +133,16 @@ public class CafeApp {
             transactionInput();
             processTransaction();
             IO.print("Next customer name (or 'done' to close): ");
-            customerName = IO.readln();
+            customerName = InputUtils.readName();
         } while (!customerName.equals("done"));
         printEndOfDayReport();
     }
 
     public void transactionInput(){
-        IO.print("Enter item number (1-5): ");
-        itemNumber = Integer.parseInt(IO.readln());
-        IO.print("How many? ");
-        quantity = Integer.parseInt((IO.readln()));
-        IO.print("Loyalty member? (yes/no) ");
-        if (IO.readln().equals("yes")){
-            loyaltyMember = true;
-        }
+
+        itemNumber = InputUtils.readValidatedInt("Enter item number (1-5): ", "Input has to be numeric only.", "Number has to be within range.", 1, 5);
+        quantity = InputUtils.readValidatedInt("How many? ", "Input has to be numeric only.", "Number has to be positive.", 1, Integer.MAX_VALUE);
+        loyaltyMember = InputUtils.checkMembership();
+
     }
 }
