@@ -1,18 +1,22 @@
 package se.lexicon;
 
+import java.util.ArrayList;
+
 public class Order {
 
     String customerName;
-    MenuItem menuItem;
-    int quantity;
     boolean membership;
+    ArrayList<LineItem> items;
     double subtotal, discount, vat, total;
 
-    public Order(String customerName, MenuItem menuItem, int quantity, boolean membership){
+    public Order(String customerName, boolean membership){
         this.customerName = customerName;
-        this.menuItem = menuItem;
-        this.quantity = quantity;
         this.membership = membership;
+        items = new ArrayList<>();
+    }
+
+    public void addItem(LineItem item){
+        items.add(item);
     }
 
     public double calculateDiscount(){
@@ -27,7 +31,11 @@ public class Order {
     }
 
     public double calculateSubtotal(){
-        return menuItem.getPrice() * quantity;
+        double sum = 0;
+        for (LineItem i : items){
+            sum += i.lineTotal();
+        }
+        return sum;
     }
 
     public double calculateTotal(){
@@ -42,29 +50,37 @@ public class Order {
 
     public void printReceipt(){
         IO.println(String.format("""
-                \n
-                ==============================
-                          Lexicon Cafe
-                ==============================
-                %-10s: %s
-                %-10s: %s x %d
-                %-10s: %.2f SEK
-                %-10s: -%.2f SEK
-                %-10s: %.2f SEK
-                ------------------------------
-                %-10s: %.2f SEK
-                ==============================
-                   Thank you, %s!
-                   See you next time.
-                ==============================\n
-                """,
-                "Customer", customerName,
-                "Item", menuItem.getName(), quantity,
-                "Subtotal", subtotal,
-                "Discount", discount,
-                "VAT", vat,
-                "TOTAL", total,
-                customerName));
+            \n
+            ==============================
+                      Lexicon Cafe
+            ==============================
+            %-10s: %s
+            ------------------------------""",
+            "Customer", customerName));
+        for(LineItem i : items){
+            IO.println(String.format(
+                "   %-10s x%d %6.2f SEK",
+                i.getMenuItem().getName(),
+                i.getQuantity(),
+                i.lineTotal()));
+        }
+        IO.println(String.format("""
+            ------------------------------
+            %-10s: %.2f SEK
+            %-10s: -%.2f SEK
+            %-10s: %.2f SEK
+            ------------------------------
+            %-10s: %.2f SEK
+            ==============================
+               Thank you, %s!
+               See you next time.
+            ==============================\n
+            """,
+            "Subtotal", subtotal,
+            "Discount", discount,
+            "VAT", vat,
+            "TOTAL", total,
+            customerName));
     }
 
     public void processTransaction(){
